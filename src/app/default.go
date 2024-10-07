@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-const DEFAULT_PORT = 8090
+const DEFAULT_ADDR = ":8090"
 const DEFAULT_TIMEOUT = 30
 
 type Env struct {
@@ -21,14 +21,14 @@ var defaultLogLevel = Env{
 	Help:         "",
 }
 
-var defaultPort = Env{
-	Key:          "EXPORTER_PORT",
-	DefaultValue: strconv.Itoa(DEFAULT_PORT),
-	Help:         "",
+var defaultAddr = Env{
+	Key:          "EXPORTER_ADDRESS",
+	DefaultValue: DEFAULT_ADDR,
+	Help:         "Exporter address is not set. Using default exporter address",
 }
 
 var defaultTimeout = Env{
-	Key:          "EXPORTER_PORT",
+	Key:          "DEFAULT_TIMEOUT",
 	DefaultValue: strconv.Itoa(DEFAULT_TIMEOUT),
 	Help:         "",
 }
@@ -55,6 +55,12 @@ var defaultDisableTracker = Env{
 	Key:          "DISABLE_TRACKER",
 	DefaultValue: "false",
 	Help:         "",
+}
+
+var defaultAuthPassword = Env{
+	Key:          "AUTH_PASSWORD",
+	DefaultValue: "",
+	Help:         "Basic Auth password for access to this instance",
 }
 
 func getEnv(env Env) string {

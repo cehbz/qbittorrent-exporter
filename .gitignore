@@ -31,6 +31,9 @@ go.work
 .env.production.localnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
+launch.json
 .env
 *.pprof
+
+src/qbittorrent-exporter
+src/qbit-exp

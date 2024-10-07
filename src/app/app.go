@@ -1,7 +1,6 @@
 package app
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"qbit-exp/logger"
@@ -14,33 +13,20 @@ import (
 
 var (
 	QBittorrentTimeout time.Duration
-	Port               int
-	ShouldShowError    bool
+	Addr               string
+	ShouldShowError    bool = true
 	DisableTracker     bool
 	LogLevel           string
 	BaseUrl            string
 	Cookie             string
 	Username           string
 	Password           string
+	AuthPassword       string
 )
 
-func SetVar(port int, disableTracker bool, loglevel string, baseUrl string, username string, password string, qBittorrentTimeout int) {
-	Port = port
-	ShouldShowError = true
-	DisableTracker = disableTracker
-	LogLevel = loglevel
-	BaseUrl = baseUrl
-	Username = username
-	Password = password
-	QBittorrentTimeout = time.Duration(qBittorrentTimeout)
-}
-
 func LoadEnv() {
-	var envfile bool
-	flag.BoolVar(&envfile, "e", false, "Use .env file")
-	flag.Parse()
 	_, err := os.Stat(".env")
-	if !os.IsNotExist(err) && !envfile {
+	if err == nil || !os.IsNotExist(err) {
 		err := godotenv.Load(".env")
 		if err != nil {
 			errormessage := "Error loading .env file:" + err.Error()
@@ -48,31 +34,23 @@ func LoadEnv() {
 		}
 	}
 
-	loglevel := logger.SetLogLevel(getEnv(defaultLogLevel))
-	qbitUsername := getEnv(defaultUsername)
-	qbitPassword := getEnv(defaultPassword)
-	qbitURL := strings.TrimSuffix(getEnv(defaultBaseUrl), "/")
-	exporterPortEnv := getEnv(defaultPort)
-	timeoutDurationEnv := getEnv(defaultTimeout)
-	disableTracker := getEnv(defaultDisableTracker)
+	LogLevel = logger.SetLogLevel(getEnv(defaultLogLevel))
 
-	exporterPort, errExporterPort := strconv.Atoi(exporterPortEnv)
-	if errExporterPort != nil {
-		panic(fmt.Sprintf("%s must be an integer", defaultPort.Key))
-	}
-	if exporterPort < 0 || exporterPort > 65353 {
-		panic(fmt.Sprintf("%s must be > 0 and < 65353", defaultPort.Key))
-	}
-
-	timeoutDuration, errTimeoutDuration := strconv.Atoi(timeoutDurationEnv)
+	timeoutDuration, errTimeoutDuration := strconv.Atoi(getEnv(defaultTimeout))
 	if errTimeoutDuration != nil {
-		panic(fmt.Sprintf("%s must be an integer", defaultPort.Key))
+		panic(fmt.Sprintf("%s must be an integer", defaultTimeout.Key))
 	}
 	if timeoutDuration < 0 {
-		panic(fmt.Sprintf("%s must be > 0", defaultPort.Key))
+		panic(fmt.Sprintf("%s must be > 0", defaultTimeout.Key))
 	}
 
-	SetVar(exporterPort, strings.ToLower(disableTracker) == "true", loglevel, qbitURL, qbitUsername, qbitPassword, timeoutDuration)
+	Addr = getEnv(defaultAddr)
+	DisableTracker = strings.ToLower(getEnv(defaultDisableTracker)) == "true"
+	BaseUrl = strings.TrimSuffix(getEnv(defaultBaseUrl), "/")
+	Username = getEnv(defaultUsername)
+	Password = getEnv(defaultPassword)
+	QBittorrentTimeout = time.Duration(timeoutDuration)
+	AuthPassword = getEnv(defaultAuthPassword)
 }
 
 func GetPasswordMasked() string {

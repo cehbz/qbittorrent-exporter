@@ -10,7 +10,6 @@ import (
 
 	app "qbit-exp/app"
 	logger "qbit-exp/logger"
-	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -21,6 +20,18 @@ var (
 	Author      = "martabal"
 	ProjectName = "qbittorrent-exporter"
 )
+
+func basicAuth(handler http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		_, pass, ok := r.BasicAuth()
+		if app.AuthToken != "" && (!ok || pass != app.AuthToken) {
+			w.Header().Set("WWW-Authenticate", `Basic realm="restricted"`)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+		handler(w, r)
+	}
+}
 
 func main() {
 	app.LoadEnv()
@@ -40,13 +51,12 @@ func main() {
 
 	qbit.Auth()
 
-	http.HandleFunc("/metrics", metrics)
-	addr := ":" + strconv.Itoa(app.Port)
-	if app.Port != app.DEFAULT_PORT {
-		logger.Log.Info("Listening on port " + strconv.Itoa(app.Port))
+	http.HandleFunc("/metrics", basicAuth(metrics))
+	if app.Addr != app.DEFAULT_ADDR {
+		logger.Log.Info("Listening on port " + app.Addr)
 	}
 	logger.Log.Info("Starting the exporter")
-	err := http.ListenAndServe(addr, nil)
+	err := http.ListenAndServe(app.Addr, nil)
 	if err != nil {
 		panic(err)
 	}
